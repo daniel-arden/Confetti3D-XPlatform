@@ -72,7 +72,7 @@ public final class UIC3DView: SCNView, ConfettiThrower {
         scene.physicsWorld.speed = 6
         self.scene = scene
 
-        mainParticlesNode.position = SCNVector3(0, 0.75, 0)
+        mainParticlesNode.position = SCNVector3(0, 0, 0)
         scene.rootNode.addChildNode(mainParticlesNode)
 
         let cameraNode = SCNNode()
@@ -130,14 +130,13 @@ public final class UIC3DView: SCNView, ConfettiThrower {
                 // Emitter
                 particleSystem.birthRate = CGFloat(options.birthRate / nbVariations)
                 particleSystem.emissionDuration = options.emissionDuration
-                particleSystem.emittingDirection = SCNVector3(0, 1, 0)
+                particleSystem.emittingDirection = options.emittingDirection
                 particleSystem.spreadingAngle = 40
-                particleSystem.particleAngleVariation = 200
-                particleSystem.particleAngle = 100
+                particleSystem.particleAngleVariation = 360
                 
                 // Simulation
                 particleSystem.particleLifeSpan = options.lifeSpan
-                particleSystem.particleVelocity = 2 + CGFloat.random(in: 0...0.01)
+                particleSystem.particleVelocity = 3 + CGFloat.random(in: 0...0.01)
                 particleSystem.particleAngularVelocity = CGFloat(Int.random(in: 100...400))
                 particleSystem.particleAngularVelocityVariation = 100
                 
@@ -157,7 +156,7 @@ public final class UIC3DView: SCNView, ConfettiThrower {
                 particleSystem.particleFriction = 100
 
                 particleSystem.dampingFactor = 1
-                particleSystem.acceleration = SCNVector3(0, 0.3, 0)
+                particleSystem.acceleration = SCNVector3(0, -0.5, 0)
 
                 particleSystem.particleMass = 1.5
                 particleSystem.particleMassVariation = 0.005
@@ -165,6 +164,7 @@ public final class UIC3DView: SCNView, ConfettiThrower {
                 particleSystem.loops = false
 
                 let particleSystemNode = SCNNode()
+                particleSystemNode.position = options.position
                 particleSystemNode.addParticleSystem(particleSystem)
                 mainParticlesNode.addChildNode(particleSystemNode)
                 
@@ -192,11 +192,10 @@ public final class UIC3DView: SCNView, ConfettiThrower {
                 // Emitter
                 particleSystem.birthRate = CGFloat(options.birthRate / nbVariations)
                 particleSystem.emissionDuration = options.emissionDuration
-                particleSystem.birthDirection = .random
-                
-                particleSystem.spreadingAngle = 20
-                particleSystem.particleAngleVariation = 2000
-                particleSystem.particleAngle = 360
+                particleSystem.emittingDirection = options.emittingDirection
+                particleSystem.spreadingAngle = 60
+                particleSystem.particleAngleVariation = 360
+
                 // Simulation
                 particleSystem.particleLifeSpan = options.lifeSpan
                 particleSystem.particleVelocity = 4
@@ -204,14 +203,16 @@ public final class UIC3DView: SCNView, ConfettiThrower {
                 
                 particleSystem.particleAngularVelocity = CGFloat(Int.random(in:  500...1000))
                 particleSystem.particleAngularVelocityVariation = 10
+
                 // Image
-                particleSystem.particleSize = 0.05 * options.size
-                particleSystem.particleSizeVariation = 0.01
-                
+                particleSystem.particleSize = 0.04 * options.size
+                particleSystem.particleSizeVariation = 0.005
+
                 // Rendering
                 particleSystem.isBlackPassEnabled = true
                 particleSystem.writesToDepthBuffer = true
                 particleSystem.orientationMode = .free
+
                 // Physics
                 particleSystem.isAffectedByGravity = true
                 particleSystem.isAffectedByPhysicsFields = true
@@ -223,7 +224,7 @@ public final class UIC3DView: SCNView, ConfettiThrower {
                 particleSystem.loops = false
                 
                 let particleSystemNode = SCNNode()
-                particleSystemNode.position = SCNVector3(0, 0.5, 0)
+                particleSystemNode.position = options.position
                 particleSystemNode.addParticleSystem(particleSystem)
                 mainParticlesNode.addChildNode(particleSystemNode)
                 

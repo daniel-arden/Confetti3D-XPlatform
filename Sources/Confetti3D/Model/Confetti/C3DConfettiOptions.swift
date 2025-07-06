@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SceneKit
 
 /// Configuration options for the confetti particle system.
 public struct C3DConfettiOptions: Sendable {
@@ -26,7 +27,13 @@ public struct C3DConfettiOptions: Sendable {
     
     /// The base size multiplier applied to each confetti image.
     let size: CGFloat
-    
+
+    /// The position of the emitter
+    let position: SCNVector3
+
+    /// The direction of the emitter
+    let emittingDirection: SCNVector3
+
     /// Initializes a new set of options for the confetti emitter.
     ///
     /// - Parameters:
@@ -38,16 +45,20 @@ public struct C3DConfettiOptions: Sendable {
     ///   - size: A scale factor applied to confetti images. Defaults to `1`.
     public init(confetti: [C3DConfetti],
                 isAffectedByGravity: Bool = true,
-                birthRate: Int = 40,
-                emissionDuration: TimeInterval = 3,
+                birthRate: Int = 70,
+                emissionDuration: TimeInterval = 1,
                 lifeSpan: TimeInterval = 10,
-                size: CGFloat = 1) {
+                size: CGFloat = 1,
+                position: SCNVector3 = SCNVector3(0, 0, 0),
+                emittingDirection: SCNVector3 = SCNVector3(0, 1, 0)) {
         self.confetti = confetti
         self.isAffectedByGravity = isAffectedByGravity
         self.birthRate = birthRate
         self.emissionDuration = emissionDuration
         self.lifeSpan = lifeSpan
         self.size = size
+        self.position = position
+        self.emittingDirection = emittingDirection
     }
 }
 

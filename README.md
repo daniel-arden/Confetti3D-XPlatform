@@ -64,7 +64,9 @@ confettiView.throwConfetti(type: .confetti(C3DConfettiOptions(confetti: customCo
                                                               birthRate: 20,
                                                               emissionDuration: 3,
                                                               lifeSpan: 15,
-                                                              size: 1)))
+                                                              size: 1.0,
+                                                              position: SCNVector3(0, 0.75, 0),
+                                                              emittingDirection: SCNVector3(0, -1, 0))))
 ``` 
 
 The `glitter` type also has the same parameters for now. 
