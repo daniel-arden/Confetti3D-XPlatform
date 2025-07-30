@@ -1,10 +1,11 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(
     name: "Confetti3D",
     platforms: [
-            .iOS(.v15)
+            .iOS(.v18),
+            .macOS(.v15)
         ],
     products: [
         .library(

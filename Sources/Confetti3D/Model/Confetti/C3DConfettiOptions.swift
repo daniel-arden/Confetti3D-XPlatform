@@ -5,7 +5,11 @@
 //  Created by Maxime Daymard on 26/10/2024.
 //
 
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 import SceneKit
 
 /// Configuration options for the confetti particle system.
@@ -75,6 +79,7 @@ fileprivate enum Constants {
     ///
     /// Each confetti is represented by a unique image located in the module bundle,
     /// and is paired with a specific color overlay to enhance visual diversity.
+    #if os(iOS)
     static let defaultConfetti = [
         C3DConfetti(image: UIImage(named: "confetti_01", in: .module, with: nil)!,
                     color: .blue),
@@ -93,5 +98,25 @@ fileprivate enum Constants {
         C3DConfetti(image: UIImage(named: "confetti_08", in: .module, with: nil)!,
                     color: UIColor(red: 1, green: 0.2, blue: 0, alpha: 1)), // Gold
     ]
+    #elseif os(macOS)
+    static let defaultConfetti = [
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_01")!,
+                    color: .blue),
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_02")!,
+                    color: .green),
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_03")!,
+                    color: .yellow),
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_04")!,
+                    color: .purple),
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_05")!,
+                    color: .red),
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_06")!,
+                    color: .cyan),
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_07")!,
+                    color: NSColor(red: 1, green: 0.1, blue: 0, alpha: 1)), // Orange
+        C3DConfetti(image: Bundle.module.image(forResource: "confetti_08")!,
+                    color: NSColor(red: 1, green: 0.2, blue: 0, alpha: 1)), // Gold
+    ]
+    #endif
 }
 

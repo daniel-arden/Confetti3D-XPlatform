@@ -5,7 +5,11 @@
 //  Created by Maxime Daymard on 26/10/2024.
 //
 
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 import SceneKit
 
 /// Configuration options for the glitter particle system.
@@ -75,12 +79,17 @@ fileprivate enum Constants {
     /// The base glitter image used for all glitter particles.
     ///
     /// Loaded from the module bundle. This image is reused with different color overlays.
+    #if os(iOS)
     static let defaultGlitterImage = UIImage(named: "confetti_08", in: .module, with: nil)!
+    #elseif os(macOS)
+    static let defaultGlitterImage = Bundle.module.image(forResource: "confetti_08")!
+    #endif
     
     /// The default glitter configuration with a warm metallic color palette.
     ///
     /// Includes multiple `C3DConfetti` instances with the same base image but
     /// different tint colors such as orange, champagne pink, copper, bronze, and gold.
+    #if os(iOS)
     static let defaultGlitter = [
         C3DConfetti(image: defaultGlitterImage,
                     color: .orange),
@@ -99,4 +108,24 @@ fileprivate enum Constants {
         C3DConfetti(image: defaultGlitterImage,
                     color: UIColor(red: 1.0, green: 0.78, blue: 0.2, alpha: 1.0)), // Classic warm gold
     ]
+    #elseif os(macOS)
+    static let defaultGlitter = [
+        C3DConfetti(image: defaultGlitterImage,
+                    color: .orange),
+        C3DConfetti(image: defaultGlitterImage,
+                    color: .white),
+        C3DConfetti(image: defaultGlitterImage,
+                    color: .brown),
+        C3DConfetti(image: defaultGlitterImage,
+                    color: NSColor(red: 1.0, green: 0.84, blue: 0.72, alpha: 1.0)), // Champagne pink
+        C3DConfetti(image: defaultGlitterImage,
+                    color: NSColor(red: 0.95, green: 0.6, blue: 0.3, alpha: 1.0)), // Light copper
+        C3DConfetti(image: defaultGlitterImage,
+                    color: NSColor(red: 0.6, green: 0.4, blue: 0.2, alpha: 1.0)), // Warm bronze
+        C3DConfetti(image: defaultGlitterImage,
+                    color: NSColor(red: 0.85, green: 0.5, blue: 0.4, alpha: 1.0)), // Deep rose gold
+        C3DConfetti(image: defaultGlitterImage,
+                    color: NSColor(red: 1.0, green: 0.78, blue: 0.2, alpha: 1.0)), // Classic warm gold
+    ]
+    #endif
 }

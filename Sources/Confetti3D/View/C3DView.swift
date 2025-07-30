@@ -2,11 +2,17 @@
 // https://docs.swift.org/swift-book
 
 import SceneKit
-import CoreMotion
 import SwiftUI
 import Combine
+#if os(iOS)
+import CoreMotion
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// A protocol that defines the ability to trigger a confetti effect.
+@MainActor
 public protocol ConfettiThrower {
     /// Triggers the confetti animation using the specified type.
     ///
@@ -18,8 +24,9 @@ public protocol ConfettiThrower {
 
 /// A SwiftUI-compatible wrapper for displaying and triggering 3D confetti effects.
 ///
-/// Internally wraps a `UIC3DView` and conforms to `ConfettiThrower`
+/// Internally wraps a platform-specific view and conforms to `ConfettiThrower`
 /// for triggering effects programmatically.
+#if os(iOS)
 public struct C3DView: UIViewRepresentable, ConfettiThrower {
     public typealias UIViewType = UIC3DView
     public typealias Context = UIViewRepresentableContext<C3DView>
@@ -39,9 +46,32 @@ public struct C3DView: UIViewRepresentable, ConfettiThrower {
         confettiView.throwConfetti(type: type)
     }
 }
+#elseif os(macOS)
+@MainActor
+public struct C3DView: NSViewRepresentable, ConfettiThrower {
+    public typealias NSViewType = NSC3DView
+    public typealias Context = NSViewRepresentableContext<C3DView>
 
-// MARK: - UIKit
+    private let confettiView = NSC3DView()
+    
+    public init() {}
 
+    public func updateNSView(_ nsView: NSViewType, context: Context) {
+    }
+
+    public func makeNSView(context: Context) -> NSViewType {
+        return confettiView
+    }
+    
+    public func throwConfetti(type: C3DConfettiType = .default) {
+        confettiView.throwConfetti(type: type)
+    }
+}
+#endif
+
+// MARK: - Platform-specific views
+
+#if os(iOS)
 /// A UIKit-compatible 3D SceneKit view for rendering and triggering confetti effects.
 ///
 /// Subclass of `SCNView` that conforms to `ConfettiThrower`,
@@ -258,3 +288,198 @@ public final class UIC3DView: SCNView, ConfettiThrower {
         scene?.physicsWorld.gravity = SCNVector3(gravity.x, gravity.y, gravity.z)
     }
 }
+#endif
+
+#if os(macOS)
+/// A macOS-compatible 3D SceneKit view for rendering and triggering confetti effects.
+///
+/// Subclass of `SCNView` that conforms to `ConfettiThrower`,
+/// allowing programmatic triggering of confetti animations.
+@MainActor
+public final class NSC3DView: SCNView, ConfettiThrower {
+    private lazy var mainParticlesNode = SCNNode()
+
+    public init() {
+        super.init(frame: .zero)
+        setup()
+    }
+
+    public override init(frame: CGRect, options: [String: Any]? = nil) {
+        super.init(frame: frame, options: options)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        let scene = SCNScene()
+        scene.background.contents = NSColor.clear
+        scene.physicsWorld.gravity = SCNVector3(x: 0, y: -1, z: 0)
+        scene.physicsWorld.speed = 6
+        self.scene = scene
+
+        mainParticlesNode.position = SCNVector3(0, 0, 0)
+        scene.rootNode.addChildNode(mainParticlesNode)
+
+        let cameraNode = SCNNode()
+        scene.rootNode.addChildNode(cameraNode)
+        cameraNode.camera = SCNCamera()
+        cameraNode.position = SCNVector3(0, 0.1, 3.5)
+
+        let turbulenceNode = SCNNode()
+        let turbulenceField = SCNPhysicsField.turbulenceField(smoothness: 0, animationSpeed: 0)
+        scene.rootNode.addChildNode(turbulenceNode)
+        turbulenceNode.position = SCNVector3(0, 0.5, -1)
+        turbulenceNode.physicsField = turbulenceField
+        turbulenceField.strength = 4
+        turbulenceField.falloffExponent = 0
+        turbulenceField.minimumDistance = 0
+
+        let turbulenceNode2 = SCNNode()
+        let turbulenceField2 = SCNPhysicsField.turbulenceField(smoothness: 0, animationSpeed: 0)
+        scene.rootNode.addChildNode(turbulenceNode2)
+        turbulenceNode2.position = SCNVector3(0, 0.2, -0.2)
+        turbulenceNode2.physicsField = turbulenceField2
+        turbulenceField2.strength = 4
+        turbulenceField2.falloffExponent = 0
+        turbulenceField2.minimumDistance = 0
+
+        allowsCameraControl = false
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+    }
+
+    public func throwConfetti(type: C3DConfettiType = .default) {
+        print("Throwing confetti")
+        
+        switch type {
+        case .confetti(let options):
+            setupConfetti(with: options)
+        case .glitter(let options):
+            setupGlitter(with: options)
+        }
+    }
+
+    private func setupConfetti(with options: C3DConfettiOptions) {
+        let confetti = options.confetti
+        
+        let nbVariations = 2
+
+        for _ in 1...nbVariations {
+            for confetto in confetti {
+                let particleSystem = SCNParticleSystem()
+                // Image & color
+                particleSystem.particleImage = confetto.image
+                particleSystem.particleColor = confetto.color ?? .white
+                particleSystem.particleColorVariation = SCNVector4(0, 0, 0, 0)
+
+                // Emitter
+                particleSystem.birthRate = CGFloat(options.birthRate / nbVariations)
+                particleSystem.emissionDuration = options.emissionDuration
+                particleSystem.emittingDirection = options.emittingDirection
+                particleSystem.spreadingAngle = 40
+                particleSystem.particleAngleVariation = 360
+                
+                // Simulation
+                particleSystem.particleLifeSpan = options.lifeSpan
+                particleSystem.particleVelocity = 3 + CGFloat.random(in: 0...0.01)
+                particleSystem.particleAngularVelocity = CGFloat(Int.random(in: 100...400))
+                particleSystem.particleAngularVelocityVariation = 100
+                
+                // Image
+                particleSystem.particleSize = 0.05 * options.size
+                particleSystem.particleSizeVariation = 0.05
+                
+                // Rendering
+                particleSystem.isBlackPassEnabled = true
+                particleSystem.writesToDepthBuffer = true
+                particleSystem.orientationMode = .free
+                
+                // Physics
+                particleSystem.isAffectedByGravity = true
+                particleSystem.isAffectedByPhysicsFields = true
+                particleSystem.particleDiesOnCollision = false
+                particleSystem.particleFriction = 100
+
+                particleSystem.dampingFactor = 1
+                particleSystem.acceleration = SCNVector3(0, -0.5, 0)
+
+                particleSystem.particleMass = 1.5
+                particleSystem.particleMassVariation = 0.005
+
+                particleSystem.loops = false
+
+                let particleSystemNode = SCNNode()
+                particleSystemNode.position = options.position
+                particleSystemNode.addParticleSystem(particleSystem)
+                mainParticlesNode.addChildNode(particleSystemNode)
+                
+                particleSystemNode.runAction(.fadeOut(duration: options.lifeSpan))
+            }
+        }
+
+        // Note: macOS doesn't have CoreMotion for device gravity
+    }
+
+    private func setupGlitter(with options: C3DGlitterOptions) {
+        let glitter = options.confetti
+        let nbVariations = 2
+
+        for _ in 1...nbVariations {
+            for confetto in glitter {
+                
+                let particleSystem = SCNParticleSystem()
+                particleSystem.particleImage = confetto.image
+                particleSystem.particleColor = confetto.color ?? .white
+                particleSystem.particleColorVariation = SCNVector4(0.01, 0.01, 0, 0)
+                
+                // Emitter
+                particleSystem.birthRate = CGFloat(options.birthRate / nbVariations)
+                particleSystem.emissionDuration = options.emissionDuration
+                particleSystem.emittingDirection = options.emittingDirection
+                particleSystem.spreadingAngle = 60
+                particleSystem.particleAngleVariation = 360
+
+                // Simulation
+                particleSystem.particleLifeSpan = options.lifeSpan
+                particleSystem.particleVelocity = 4
+                particleSystem.particleVelocityVariation = 2
+                
+                particleSystem.particleAngularVelocity = CGFloat(Int.random(in:  500...1000))
+                particleSystem.particleAngularVelocityVariation = 10
+
+                // Image
+                particleSystem.particleSize = 0.04 * options.size
+                particleSystem.particleSizeVariation = 0.005
+
+                // Rendering
+                particleSystem.isBlackPassEnabled = true
+                particleSystem.writesToDepthBuffer = true
+                particleSystem.orientationMode = .free
+
+                // Physics
+                particleSystem.isAffectedByGravity = true
+                particleSystem.isAffectedByPhysicsFields = true
+                particleSystem.particleDiesOnCollision = false
+                particleSystem.particleFriction = 200
+                particleSystem.dampingFactor = 1.8
+                particleSystem.acceleration = SCNVector3(0, 0.3, 0)
+                
+                particleSystem.loops = false
+                
+                let particleSystemNode = SCNNode()
+                particleSystemNode.position = options.position
+                particleSystemNode.addParticleSystem(particleSystem)
+                mainParticlesNode.addChildNode(particleSystemNode)
+                
+                particleSystemNode.runAction(.fadeOut(duration: options.lifeSpan))
+            }
+        }
+
+        // Note: macOS doesn't have CoreMotion for device gravity
+    }
+}
+#endif
