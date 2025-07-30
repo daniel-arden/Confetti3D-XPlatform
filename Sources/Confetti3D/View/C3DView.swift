@@ -350,6 +350,7 @@ public final class NSC3DView: SCNView, ConfettiThrower {
         allowsCameraControl = false
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
+        backgroundColor = .clear
     }
 
     public func throwConfetti(type: C3DConfettiType = .default) {
